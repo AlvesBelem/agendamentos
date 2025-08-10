@@ -23,8 +23,10 @@ export const clinicsTable = pgTable("clinics", {
     .$onUpdate(() => new Date()),
 });
 
-export const clinicsTableRelations = relations(clinicsTable, () => ({
-    
+export const clinicsTableRelations = relations(clinicsTable, ({ many }) => ({
+  doctors: many(doctorsTable),
+  patients: many(patientsTable),
+  appointments: many(appointmentsTable),
 }));
 
 export const doctorsTable = pgTable("doctors", {
@@ -46,6 +48,13 @@ export const doctorsTable = pgTable("doctors", {
     .$onUpdate(() => new Date()),
 });
 
+export const doctorsTableRelations = relations(doctorsTable, ({ one }) => ({
+  clinic: one(clinicsTable, {
+    fields: [doctorsTable.clinicId],
+    references: [clinicsTable.id],
+  }),
+}));
+
 export const patientSexEnum = pgEnum("patient_sex", ["male", "femate"]);
 
 export const patientsTable = pgTable("patients", {
@@ -62,6 +71,13 @@ export const patientsTable = pgTable("patients", {
     .defaultNow()
     .$onUpdate(() => new Date()),
 });
+
+export const patientsTableRelations = relations(patientsTable, ({ one }) => ({
+  clinic: one(clinicsTable, {
+    fields: [patientsTable.clinicId],
+    references: [clinicsTable.id],
+  }),
+}));
 
 export const appointmentsTable = pgTable("appointments", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -80,3 +96,18 @@ export const appointmentsTable = pgTable("appointments", {
     .defaultNow()
     .$onUpdate(() => new Date()),
 });
+
+export const appointmentsTableRelations = relations(appointmentsTable, ({ one }) => ({
+  clinic: one(clinicsTable, {
+    fields: [appointmentsTable.clinicId],
+    references: [clinicsTable.id],
+  }),
+  patient: one(patientsTable, {
+    fields: [appointmentsTable.patientId],
+    references: [patientsTable.id],
+  }),
+  doctor: one(doctorsTable, {
+    fields: [appointmentsTable.doctorId],
+    references: [doctorsTable.id],
+  }),
+}));
